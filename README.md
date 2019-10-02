@@ -31,15 +31,25 @@ docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${C
 When working inside a container, it will be pointless to try to connect database on localhost:5432. Localhost means the system itself, and it's obvious that no database running on 5432 port of this maven:jdk container. Instead, the DATABASE_URL should be the IP address of postgresql database container.
 Then you can run unit test and troubleshoot error in this container, which is the goal of this stage.
 
+```bash
+mvn clean compile flyway:migrate -P unit -Ddb_url=localhost ...
+mvn test -Ddb_url=localhost ...
+```
+As we can't use IDE tools in container, we should excute database migration and unit test in linux command line. You can find an example command above, and you should revise it based on your configuration.
+
 ## Package **.war** file in docker container
-In the same container above, package a **.war** file. Answer following questions:
+In the same container above, package a **.war** file. 
+```bash
+mvn compile package -DskipTests=true -q
+```
+Answer following questions:
 1. Does this **.war** file contain database information?
 2. If the answer to Question 1 is Yes, what should you do if you want to change database configuration?
-3. If the answer to Question 1 is No, how should you input the database configuration information?
+3. If the answer to Question 1 is No, how should you input the database configuration?
 
 ## Build Docker image with **.war** file and Dockerfile
 Before we start this part, please ask yourself:
-[What does ENV and ARG in Dockerfile stand for?](https://docs.docker.com/engine/reference/builder/)
+[What does ENV and COPY in Dockerfile stand for?](https://docs.docker.com/engine/reference/builder/)
 [How does setenv.sh and ROOT.war work?](https://dotcms.com/docs/latest/deploy-as-a-war-in-tomcat)
 Then try to build your iamge with different docker arguments like DB_URL, DB_PASSWORD, transfer them to environment variables in docker container. After that, setenv.sh will have them transfered into JVM options, which will be used by pom.xml in the end.
 
